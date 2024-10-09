@@ -11,5 +11,5 @@
 #SBATCH -c 20
 
 for ((i=1; i<=20; i++)); do
-    ./task1 1024 i
+    ./task1 1024 $i
 done
