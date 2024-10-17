@@ -1,6 +1,9 @@
 // Generated with ChatGPT
 #include <iostream>
 #include "msort.h"
+#include <vector>
+#include <algorithm>
+using namespace std;
 
 // Function to merge two sorted halves of an array
 void merge(int* arr, int left, int mid, int right) {
@@ -45,34 +48,21 @@ void merge(int* arr, int left, int mid, int right) {
     }
 }
 
-// Serial merge sort
-void serial_merge_sort(int* arr, const std::size_t n) {
-    if (n < 2) return; // Base case
-    int mid = n / 2;
-    serial_merge_sort(arr, mid);
-    serial_merge_sort(arr + mid, n - mid);
-    merge(arr, 0, mid - 1, n - 1);
-}
-
 // Main merge sort function with OpenMP
 void msort(int* arr, const std::size_t n, const std::size_t threshold) {
     if ((n < threshold) | (threshold == 1)) {
-        serial_merge_sort(arr, n);
+        vector<int> idk(arr, arr + n);
+        sort(idk.begin(), idk.end());
+        arr = &idk[0];
         return;
     }
 
     int mid = n / 2;
 
-    #pragma omp parallel
-    {
-        #pragma omp single
-        {
-            #pragma omp task
-            msort(arr, mid, threshold);
-            #pragma omp task
-            msort(arr + mid, n - mid, threshold);
-        }
-    }
-
+    #pragma omp task
+    msort(arr, mid, threshold);
+    #pragma omp task
+    msort(arr + mid, n - mid, threshold);
+    #pragma omp taskwait
     merge(arr, 0, mid - 1, n - 1);
 }

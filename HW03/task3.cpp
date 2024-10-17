@@ -3,6 +3,8 @@
 #include "msort.h"
 #include <random>
 #include <chrono>
+#include <omp.h>
+
 // Provide some namespace shortcuts
 using std::chrono::high_resolution_clock;
 using std::chrono::duration;
@@ -31,7 +33,13 @@ int main(int argc, char *argv[]) {
 
     // Apply the convolution
     start = high_resolution_clock::now();
-    msort(array, n, ts);
+    #pragma omp parallel
+    {
+        #pragma omp single
+        {
+        msort(array, n, ts);
+        }
+    }
     end = high_resolution_clock::now();
 
     duration_sec = std::chrono::duration_cast<duration<double, std::milli>>(end - start);
