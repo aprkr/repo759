@@ -10,17 +10,14 @@
 
 #SBATCH -c 8
 
-OMP_SCHEDULE=static
 for ((i=1; i<=8; i++)); do
-    ./task3 100 100 $i 
+    OMP_SCHEDULE=static ./task3 100 100 $i 
 done
 
-OMP_SCHEDULE=guided
 for ((i=1; i<=8; i++)); do
-    ./task3 100 100 $i 
+    OMP_SCHEDULE=guided ./task3 100 100 $i 
 done
 
-OMP_SCHEDULE=dynamic
 for ((i=1; i<=8; i++)); do
-    ./task3 100 100 $i 
+    OMP_SCHEDULE=dynamic ./task3 100 100 $i 
 done
