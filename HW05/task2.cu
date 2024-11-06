@@ -3,7 +3,6 @@
 #include <ctime>
 #include <random>
 
-// CUDA kernel that calculates ax + y
 __global__ void computeValues(int *dA, int a) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;  // Unique thread index
     if (index < 16) {
@@ -18,8 +17,6 @@ int main() {
     std::mt19937 generator(some_seed);
     int a = generator() % 10;
     
-    printf("Random integer a = %d\n", a);
-
     int hA[16];
     
     int *dA;
@@ -31,7 +28,6 @@ int main() {
 
     cudaDeviceSynchronize();
 
-    printf("Values in hA: ");
     for (int i = 0; i < 16; ++i) {
         printf("%d ", hA[i]);
     }
