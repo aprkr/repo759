@@ -5,37 +5,40 @@
 
 // Kernel function for performing the stencil operation
 __global__ void stencil_kernel(const float* image, const float* mask, float* output, unsigned int n, unsigned int R) {
-    // Shared memory to store the mask and the image window for the block
+    // Shared memory: first part will store the mask, second part will store the image window
     extern __shared__ float shared_mem[];
 
-    // Mask is stored in the first part of shared memory
-    float* shared_mask = shared_mem;
-    // Image window for the current block is stored after the mask
-    float* shared_image = shared_mem + (2 * R + 1);
+    // Shared memory pointers
+    float* shared_mask = shared_mem;          // Shared memory for the mask
+    float* shared_image = shared_mem + (2 * R + 1); // Shared memory for the image window
 
     // Thread index within the block
     unsigned int thread_idx = threadIdx.x;
 
-    // Load the mask into shared memory
+    // Load the mask into shared memory (all threads load the full mask)
     if (thread_idx < (2 * R + 1)) {
         shared_mask[thread_idx] = mask[thread_idx];
     }
 
-    // Load the image elements needed for convolution into shared memory
+    // Global index of the element to be processed
     unsigned int global_idx = blockIdx.x * blockDim.x + thread_idx - R;
+
+    // Load image elements into shared memory
     if (global_idx >= 0 && global_idx < n) {
         shared_image[thread_idx] = image[global_idx];
     } else {
-        shared_image[thread_idx] = 1.0f; // Outside the image boundary, set image value to 1
+        shared_image[thread_idx] = 1.0f; // Boundary handling (image[i] = 1 for out-of-bounds)
     }
 
-    __syncthreads();  // Synchronize threads to ensure shared memory is loaded
+    __syncthreads(); // Synchronize to make sure image and mask are loaded before computation
 
-    // Each thread computes one element of the output array
+    // Compute the output value if the global index is within bounds
     if (global_idx >= 0 && global_idx < n) {
-        float result = 0.0f;
+        float result  0.0f;
+        // Perform convolution: sum(mask[j] * image[i+j]) for j = -R to R
         for (int j = -R; j <= R; ++j) {
-            result += shared_image[thread_idx + j] * shared_mask[j + R];
+            int image_idx = thread_idx + j;
+            result += shared_image[image_idx] * shared_mask[j + R];
         }
         output[global_idx] = result;
     }
