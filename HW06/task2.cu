@@ -28,16 +28,6 @@ int main(int argc, char** argv) {
     fill_random(image, n);
     fill_random(mask, 2 * R + 1);
 
-    // Device arrays
-    float *d_image, *d_mask, *d_output;
-    cudaMalloc(&d_image, n * sizeof(float));
-    cudaMalloc(&d_mask, (2 * R + 1) * sizeof(float));
-    cudaMalloc(&d_output, n * sizeof(float));
-
-    // Copy the image and mask from host to device
-    cudaMemcpy(d_image, image, n * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_mask, mask, (2 * R + 1) * sizeof(float), cudaMemcpyHostToDevice);
-
     // CUDA event for timing
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
@@ -47,7 +37,7 @@ int main(int argc, char** argv) {
     cudaEventRecord(start);
 
     // Call the stencil function (launches the kernel)
-    stencil(d_image, d_mask, d_output, n, R, threads_per_block);
+    stencil(image, mask, output, n, R, threads_per_block);
 
     // Record stop time
     cudaEventRecord(stop);
@@ -59,9 +49,6 @@ int main(int argc, char** argv) {
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
 
-    // Copy the result from device to host
-    cudaMemcpy(output, d_output, n * sizeof(float), cudaMemcpyDeviceToHost);
-
     // Print the last element of the output array
     std::cout << output[n - 1] << std::endl;
 
@@ -72,9 +59,6 @@ int main(int argc, char** argv) {
     delete[] image;
     delete[] mask;
     delete[] output;
-    cudaFree(d_image);
-    cudaFree(d_mask);
-    cudaFree(d_output);
 
     // Destroy CUDA events
     cudaEventDestroy(start);
