@@ -16,9 +16,7 @@ __global__ void matmul_kernel(const float* A, const float* B, float* C, size_t n
 }
 
 void matmul(const float* A, const float* B, float* C, size_t n, unsigned int threads_per_block) {
-    dim3 blockSize(threads_per_block, threads_per_block);
-
-    dim3 gridSize((n + blockSize.x - 1) / blockSize.x, (n + blockSize.y - 1) / blockSize.y);
+    int blocks = (n + threads_per_block - 1) / threads_per_block;
 
     float *d_A, *d_B, *d_C;
     size_t num_bytes = n * n * sizeof(float);
@@ -29,8 +27,8 @@ void matmul(const float* A, const float* B, float* C, size_t n, unsigned int thr
     cudaMemcpy(d_A, A, num_bytes, cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, B, num_bytes, cudaMemcpyHostToDevice);
 
-    matmul_kernel<<<gridSize, blockSize>>>(d_A, d_B, d_C, n);
-
+    matmul_kernel<<<blocks, threads_per_block>>>(d_A, d_B, d_C, n);
+    
     cudaDeviceSynchronize();
     cudaMemcpy(C, d_C, num_bytes, cudaMemcpyDeviceToHost);
 
