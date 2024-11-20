@@ -21,24 +21,26 @@ __global__ void stencil_kernel(const float* image, const float* mask, float* out
     }
 
     // Global index of the element to be processed
-    unsigned int global_idx = blockIdx.x * blockDim.x + thread_idx - R;
+    int global_idx = blockIdx.x * blockDim.x + thread_idx;
 
     // Load image elements into shared memory
-    if (global_idx >= 0 && global_idx < n) {
+    if (global_idx < n) {
         shared_image[thread_idx] = image[global_idx];
-    } else {
-        shared_image[thread_idx] = 1.0f; // Boundary handling (image[i] = 1 for out-of-bounds)
     }
 
     __syncthreads(); // Synchronize to make sure image and mask are loaded before computation
 
     // Compute the output value if the global index is within bounds
-    if (global_idx >= 0 && global_idx < n) {
-        float result  0.0f;
+    if (global_idx < n) {
+        float result = 0.0f;
         // Perform convolution: sum(mask[j] * image[i+j]) for j = -R to R
         for (int j = -R; j <= R; ++j) {
             int image_idx = thread_idx + j;
-            result += shared_image[image_idx] * shared_mask[j + R];
+            if ((image_index < 0) || (image_index > (n - 1))) {
+                result += shared_mask[j + R];
+            } else {
+                result += shared_image[image_idx] * shared_mask[j + R];
+            }
         }
         output[global_idx] = result;
     }
