@@ -23,21 +23,13 @@ int main(int argc, char** argv) {
     fill_random(A, n);
     fill_random(B, n);
 
-    float *d_A, *d_B, *d_C;
-    cudaMalloc(&d_A, n * n * sizeof(float));
-    cudaMalloc(&d_B, n * n * sizeof(float));
-    cudaMalloc(&d_C, n * n * sizeof(float));
-
-    cudaMemcpy(d_A, A, n * n * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, B, n * n * sizeof(float), cudaMemcpyHostToDevice);
-
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 
     cudaEventRecord(start);
 
-    matmul(d_A, d_B, d_C, n, threads_per_block);
+    matmul(A, B, C, n, threads_per_block);
 
     cudaEventRecord(stop);
 
@@ -45,7 +37,6 @@ int main(int argc, char** argv) {
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
 
-    cudaMemcpy(C, d_C, n * n * sizeof(float), cudaMemcpyDeviceToHost);
     std::cout << C[n * n - 1] << std::endl;
 
     std::cout << milliseconds << std::endl;
